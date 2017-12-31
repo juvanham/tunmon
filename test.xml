@@ -1,0 +1,9 @@
+<tun_mon>
+  <net_devices>
+    <net_device>br0</net_device>
+    <net_device>vde0</net_device>
+  </net_devices>
+  <actions>
+    <action><time>5</time><script>./script/ping.sh</script></action>
+  </actions>
+</tun_mon>
