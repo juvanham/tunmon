@@ -20,7 +20,7 @@ namespace tunmon::input {
   class net_dev {
   private:
     const std::string proc_file{"/proc/net/dev"};
-    const std::string re_str{"([a-z0-9]+):\\s+([0-9]+)\\s+([0-9]+)\\s+"};
+    const std::string re_str{"([a-z0-9\\-]+):\\s+([0-9]+)\\s+([0-9]+)\\s+"};
     const std::regex interface_re=std::regex(re_str,std::regex_constants::icase);
 
     struct net_dev_stat {
