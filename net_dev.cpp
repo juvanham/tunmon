@@ -19,12 +19,17 @@ namespace tunmon::input {
     if (devices.find(dev_name)==devices.cend()) {
       net_dev_stat st(this->current_time);
       devices.insert(std::pair(dev_name,st));
+      return true;
     }
+    return false;
   }
 
   bool net_dev::unobserve(const std::string &dev_name) {
-    if (devices.find(dev_name)==devices.cend())
+    if (devices.find(dev_name)==devices.cend()) {
       devices.erase(dev_name);
+      return true;
+    }
+    return false;
   }
 
   std::pair<long,long> net_dev::read_incoming_data(const std::string &line) {

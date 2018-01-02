@@ -1,6 +1,6 @@
 all: tun_mon
 
-CXX=g++ --std=c++17 -g
+CXX=g++ --std=c++17 -Wall -pedantic -g
 LIBS=-lboost_program_options -lboost_system -lboost_filesystem -lpthread
 
 net_dev.o: net_dev.cpp net_dev.hpp
