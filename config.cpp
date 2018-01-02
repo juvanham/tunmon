@@ -64,15 +64,21 @@ namespace tunmon::cfg {
       net_devices.push_back(chld.second.data());
       cout << "net_device : " << chld.second.data() << endl;
     }
+    interval_sec=tree_impl->tree.get("tun_mon.interval",1);
+    cout << "interval : " << interval_sec << "sec" << endl;
+    auto half_interval=interval_sec/2;
     actions.clear();
     for (auto &chld:tree_impl->tree.get_child("tun_mon.actions"))
       if (chld.first=="action") {
-        auto time=chld.second.get<int>("time");
+        auto time=chld.second.get<int>("time",0);
+	auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
         auto script=chld.second.get<string>("script");
-        actions.insert(pair(time,script));
+        actions.insert(pair(iteration_count,
+			    script)
+		       );
       }
     for (auto &action:actions) {
-      cout << "at " << action.first << " call " << action.second << endl;
+      cout << "at " << action.first << " iterations without incoming traffic, call " << action.second << endl;
     }
   }
 
@@ -99,5 +105,10 @@ namespace tunmon::cfg {
   bool config::tracing() const {
     return trace_flag;
   }
+  
+  int config::interval() const {
+    return interval_sec;
+  }
 
+  
 }

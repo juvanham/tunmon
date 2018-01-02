@@ -35,9 +35,9 @@ int main(int argc, char* argv[]) {
     for (auto &failure:proc_driver.list_failures()) {
       std::cout << failure << std::endl;
     }
-    sleep(1);
+    sleep(cfg.interval());
     if (cfg.tracing())
-      std::cout << "loop" << std::endl;
+      std::cout << "loop after sleeping " << cfg.interval() << "s" << std::endl;
   }
 
 }

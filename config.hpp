@@ -23,6 +23,7 @@ namespace tunmon::cfg {
     std::map<int,const std::string> actions;
     void parse_ptree(std::unique_ptr<config::ptree_impl> &pree_impl);
     bool trace_flag;
+    int interval_sec;
   public:
     config();
     ~config();
@@ -31,6 +32,7 @@ namespace tunmon::cfg {
     std::list<std::string> get_net_devices() const;
     std::map<int,std::string> get_actions() const;
     bool tracing() const;
+    int interval() const;
   };
 
 }
