@@ -73,6 +73,12 @@ namespace tunmon::cfg {
         auto time=chld.second.get<int>("time",0);
 	auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
         auto script=chld.second.get<string>("script");
+	if (actions.find(iteration_count)!=actions.end()) {
+	  cerr << "fatal: action " << script
+	       << "collides iteration " << iteration_count << "."
+	       << endl << "Consider a smaller interval" << endl;
+	  exit(1);
+	}
         actions.insert(pair(iteration_count,
 			    script)
 		       );
