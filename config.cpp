@@ -30,7 +30,7 @@ namespace tunmon::cfg {
     ptree_impl() {}
   };
 
-  config::config() : option_desc{std::make_unique<config_impl>()} {		       
+  config::config() : option_desc{std::make_unique<config_impl>()} {
     option_desc->desc.add_options()
       ("help", "produce help message")
       ("config-file", po::value<std::string>()->default_value("tunmon.conf"))
@@ -71,21 +71,22 @@ namespace tunmon::cfg {
     for (auto &chld:tree_impl->tree.get_child("tun_mon.actions"))
       if (chld.first=="action") {
         auto time=chld.second.get<int>("time",0);
-	auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
+        auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
         auto script=chld.second.get<string>("script");
-	if (actions.find(iteration_count)!=actions.end()) {
-	  cerr << "fatal: action " << script
-	       << "collides iteration " << iteration_count << "."
-	       << endl << "Consider a smaller interval" << endl;
-	  exit(1);
-	}
+        if (actions.find(iteration_count)!=actions.end()) {
+          cerr << "fatal: action " << script
+               << "collides iteration " << iteration_count << "."
+               << endl << "Consider a smaller interval" << endl;
+          exit(1);
+        }
         actions.insert(pair(iteration_count,
-			    script)
-		       );
+                            script)
+                       );
       }
     for (auto &action:actions) {
       cout << "at " << action.first << " iterations without incoming traffic, call " << action.second << endl;
     }
+    pid_file_setting==tree_impl->tree.get("tun_mon.pidfile","");
   }
 
   void config::parse_xml(const std::string &filename) {
@@ -111,10 +112,13 @@ namespace tunmon::cfg {
   bool config::tracing() const {
     return trace_flag;
   }
-  
+
   int config::interval() const {
     return interval_sec;
   }
 
-  
+  const string& config::pidfile() const {
+    return pid_file_setting;
+  }
+
 }

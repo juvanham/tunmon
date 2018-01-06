@@ -12,13 +12,16 @@ config.o: config.cpp config.hpp
 driver.o: driver.cpp driver.hpp
 	$(CXX) -c driver.cpp
 
-main.o: main.cpp net_dev.hpp config.hpp driver.hpp
+pidfile.o: pidfile.cpp pidfile.hpp
+	$(CXX) -c pidfile.cpp
+
+main.o: main.cpp net_dev.hpp config.hpp driver.hpp pidfile.hpp
 	$(CXX) -c main.cpp
 
-tun_mon: main.o net_dev.o config.o driver.o
-	g++ $(LIBS) -o tun_mon main.o net_dev.o config.o driver.o
+tun_mon: main.o net_dev.o config.o driver.o pidfile.o
+	g++ $(LIBS) -o tun_mon main.o net_dev.o config.o driver.o pidfile.o
 
 .PHONY: clean
 
 clean:
-	rm -f tun_mon main.o net_dev.o config.o driver.o
+	rm -f tun_mon main.o net_dev.o config.o driver.o pidfile.o

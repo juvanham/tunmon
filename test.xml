@@ -4,6 +4,7 @@
     <net_device>vde0</net_device>
   </net_devices>
   <interval>2</interval>
+  <pidfile>./tunmon.pid</pidfile>
   <actions>
     <action><time>5</time><script>./script/ping.sh</script></action>
   </actions>

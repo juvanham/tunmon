@@ -8,6 +8,7 @@
 #include "net_dev.hpp"
 #include "config.hpp"
 #include "driver.hpp"
+#include "pidfile.hpp"
 #include <iostream>
 #include <unistd.h>
 
@@ -16,6 +17,12 @@ int main(int argc, char* argv[]) {
   tunmon::cfg::config cfg;
   tunmon::output::driver proc_driver;
   cfg.parse_command_line(argc, argv);
+  posix_util::pidfile pidfile(cfg.pidfile());
+  if (!cfg.pidfile().empty() &&
+      !pidfile.write()) {
+    std::cerr << "active pidfile found : " << cfg.pidfile() << std::endl;
+    exit(1);
+  }
   auto devices=cfg.get_net_devices();
   for (auto &dev_name:devices)
     dev.observe(dev_name);

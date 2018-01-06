@@ -24,6 +24,7 @@ namespace tunmon::cfg {
     void parse_ptree(std::unique_ptr<config::ptree_impl> &pree_impl);
     bool trace_flag;
     int interval_sec;
+    std::string pid_file_setting;
   public:
     config();
     ~config();
@@ -33,6 +34,7 @@ namespace tunmon::cfg {
     std::map<int,std::string> get_actions() const;
     bool tracing() const;
     int interval() const;
+    const std::string& pidfile() const;
   };
 
 }
