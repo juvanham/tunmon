@@ -25,3 +25,4 @@ tun_mon: main.o net_dev.o config.o driver.o pidfile.o
 
 clean:
 	rm -f tun_mon main.o net_dev.o config.o driver.o pidfile.o
+	rm -f tunmon.pid *~
