@@ -138,4 +138,10 @@ namespace posix_util {
     return true;
   }
 
+  bool pidfile::present() const {
+    if (filename.empty())
+      return true;
+    return fs::exists(filename);
+  }
+
 }

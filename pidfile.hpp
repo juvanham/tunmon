@@ -30,6 +30,7 @@ namespace posix_util {
     pidfile(const std::string &path);
     bool same_pid() const;
     bool write();
+    bool present() const;
     virtual ~pidfile();
   };
 
