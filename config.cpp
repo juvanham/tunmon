@@ -68,6 +68,7 @@ namespace tunmon::cfg {
     cout << "interval : " << interval_sec << "sec" << endl;
     auto half_interval=interval_sec/2;
     actions.clear();
+    last_action_iter=std::numeric_limits<int>::min();
     for (auto &chld:tree_impl->tree.get_child("tun_mon.actions"))
       if (chld.first=="action") {
         auto time=chld.second.get<int>("time",0);
@@ -79,6 +80,7 @@ namespace tunmon::cfg {
                << endl << "Consider a smaller interval" << endl;
           exit(1);
         }
+	last_action_iter=std::max(iteration_count,last_action_iter);	  
         actions.insert(pair(iteration_count,
                             script)
                        );
@@ -86,7 +88,28 @@ namespace tunmon::cfg {
     for (auto &action:actions) {
       cout << "at " << action.first << " iterations without incoming traffic, call " << action.second << endl;
     }
-    pid_file_setting==tree_impl->tree.get("tun_mon.pidfile","");
+    cout << "max_action_age " << last_action_iter << endl;
+    retry_actions.clear();
+    for (auto &chld:tree_impl->tree.get_child("tun_mon.retry_actions"))
+      if (chld.first=="retry") {
+        auto time=chld.second.get<int>("interval",0);
+        auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
+        auto script=chld.second.get<string>("script");
+        if (retry_actions.find(iteration_count)!=retry_actions.end()) {
+          cerr << "fatal: retry_action " << script
+               << "collides iteration " << iteration_count << "."
+               << endl << "Consider a smaller interval" << endl;
+          exit(1);
+        }
+        retry_actions.insert(pair(iteration_count,
+                            script)
+                       );
+      }
+    for (auto &action:retry_actions) {
+      cout << "retry each " << action.first << " iterations without incoming traffic, call " << action.second << endl;
+    }
+    pid_file_setting=tree_impl->tree.get("tun_mon.pidfile","");
+    cout << "pid_file :" << pid_file_setting << endl;
   }
 
   void config::parse_xml(const std::string &filename) {
@@ -109,6 +132,14 @@ namespace tunmon::cfg {
     return result;
   }
 
+  map<int,std::string> config::get_retry_actions() const {
+    map<int,std::string> result;
+    for (auto &elm:retry_actions) {
+      result.insert(pair(elm.first,string(elm.second)));
+    }
+    return result;
+  }
+
   bool config::tracing() const {
     return trace_flag;
   }
@@ -121,4 +152,8 @@ namespace tunmon::cfg {
     return pid_file_setting;
   }
 
+  int config::max_action_count() const {
+    return last_action_iter;
+  }
+  
 }

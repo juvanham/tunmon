@@ -25,6 +25,8 @@ namespace tunmon::cfg {
     bool trace_flag;
     int interval_sec;
     std::string pid_file_setting;
+    int last_action_iter;
+    std::map<int,const std::string> retry_actions;
   public:
     config();
     ~config();
@@ -32,9 +34,11 @@ namespace tunmon::cfg {
     void parse_xml(const std::string &filename);
     std::list<std::string> get_net_devices() const;
     std::map<int,std::string> get_actions() const;
+    std::map<int,std::string> get_retry_actions() const;
     bool tracing() const;
     int interval() const;
     const std::string& pidfile() const;
+    int max_action_count() const;
   };
 
 }

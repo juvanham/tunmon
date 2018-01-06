@@ -8,4 +8,7 @@
   <actions>
     <action><time>5</time><script>./script/ping.sh</script></action>
   </actions>
+  <retry_actions>
+    <retry><interval>15</interval><script>./script/retry.sh</script></retry>
+  </retry_actions>
 </tun_mon>
