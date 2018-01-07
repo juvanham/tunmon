@@ -6,6 +6,7 @@
  */
 
 #include "driver.hpp"
+#include <sstream>
 #include <boost/process.hpp>
 #include <boost/process/shell.hpp>
 
@@ -13,6 +14,7 @@ namespace tunmon::output {
   using namespace std;
   namespace bp = boost::process;
 
+  
   class driver::process {
     const string name;
     const string dev_name;
@@ -23,14 +25,15 @@ namespace tunmon::output {
     bool mark;
   public:
     process(const string &name_, const string &dev_name_, int time_);
+    ~process() = default;
     bool running();
     optional<int> exit_code();
     string to_string() const;
     void mark_to_remove() {mark=true;}
     bool is_marked() { return mark;}
-    
   };
 
+  
   driver::process::process(const string &name_,
 			   const string &dev_name_,
 			   int time_
@@ -60,17 +63,30 @@ namespace tunmon::output {
     return exit_code_;
   } 
 
+  
   string driver::process::to_string() const {
     return name+" "+dev_name+" "+std::to_string(time);
   }
 
-  driver::driver() = default;
-  driver::~driver()=default;
   
-  void driver::execute(const string &name, const string &dev_name, int time) {
-    process_queue.push_back(make_unique<driver::process>(name,dev_name,time));
+  driver::driver() : debug_flag{false}
+  {}
+
+  
+  driver::~driver()
+  {}
+
+  
+  string driver::execute(const string &name, const string &dev_name, int time) {
+    auto process_inst=make_unique<driver::process>(name,dev_name,time);
+    stringstream debugstream;
+    if (debug_flag)
+      debugstream << "execute : " << process_inst->to_string() << endl;
+    process_queue.push_back(move(process_inst));
+    return debugstream.str();
   }
 
+  
   list<string> driver::list_failures() {
     list<string> result;
     for (auto &q_elem: process_queue) {
@@ -83,4 +99,10 @@ namespace tunmon::output {
     process_queue.remove_if([](auto &a)->bool{return a->is_marked();});
     return result;
   }
+
+  
+  void driver::set_debug(bool debug) {
+    debug_flag=debug;
+  }
+
 }

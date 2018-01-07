@@ -11,16 +11,17 @@
 #include <memory>
 #include <list>
 
-
 namespace tunmon::output {
   class driver {
-    class process;
+    class process;  // pimpl
     std::list<std::unique_ptr<driver::process>> process_queue;
+    bool debug_flag;
   public:
     driver();
     virtual ~driver();
-    void execute(const std::string &name, const std::string &dev_name, int time);
+    std::string execute(const std::string &name, const std::string &dev_name, int time);
     std::list<std::string> list_failures();
+    void set_debug(bool debug);
   };
 }
 
