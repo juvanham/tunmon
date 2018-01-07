@@ -11,4 +11,7 @@
   <retry_actions>
     <retry><interval>15</interval><script>./script/retry.sh</script></retry>
   </retry_actions>
+  <on_restore>
+    <script>./script/restored.sh</script>
+  </on_restore>
 </tun_mon>

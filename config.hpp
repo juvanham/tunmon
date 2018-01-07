@@ -27,6 +27,7 @@ namespace tunmon::cfg {
     std::string pid_file_setting;
     int last_action_iter;
     std::map<int,const std::string> retry_actions;
+    std::string on_restore_script;
   public:
     config();
     ~config();
@@ -39,6 +40,7 @@ namespace tunmon::cfg {
     int interval() const;
     const std::string& pidfile() const;
     int max_action_count() const;
+    const std::string& restored() const;
   };
 
 }

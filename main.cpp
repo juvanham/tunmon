@@ -5,12 +5,18 @@
  * description: tool to act on missing inbound traffic of a tunnel
  */
 
-#include "net_dev.hpp"
 #include "config.hpp"
 #include "driver.hpp"
+#include "net_dev.hpp"
 #include "pidfile.hpp"
 #include <iostream>
 #include <unistd.h>
+
+
+void conditional_output(std::string prefix,std::string line) {
+  if (!line.empty())
+    std::cout << prefix << " " << line << std::endl;
+}
 
 int main(int argc, char* argv[]) {
   tunmon::input::net_dev dev;
@@ -23,38 +29,44 @@ int main(int argc, char* argv[]) {
     std::cerr << "active pidfile found : " << cfg.pidfile() << std::endl;
     exit(1);
   }
+  std::map<std::string,int> prev_down_times;
   auto devices=cfg.get_net_devices();
-  for (auto &dev_name:devices)
+  for (auto &dev_name:devices) {
     dev.observe(dev_name);
+    prev_down_times[dev_name]=0;
+  }
   auto actions=cfg.get_actions();
   auto retry_actions=cfg.get_retry_actions();
+  const auto interval=cfg.interval();
+  proc_driver.set_debug(cfg.tracing());
   while (pidfile.present()) {
     auto [bytes,packets]=dev.parse_proc_file();
     if (cfg.tracing())
-      std::cout << "bytes " << bytes << "  packets " << packets << std::endl;
+      std::cout << "after " << interval << "s, bytes " << bytes << ", packets " << packets << std::endl;
     for (const auto &dev_name:devices) {
       const auto age=*(dev.age(dev_name));
-      const auto restored_age=age*cfg.interval();
+      const auto restored_age=age*interval;
+      if (age==0 and prev_down_times[dev_name] && !(cfg.restored().empty())) {
+	auto output= proc_driver.execute(cfg.restored(), dev_name, prev_down_times[dev_name]*interval);
+	conditional_output("(restored)", output);
+      }
       if (auto action=actions.find(age); action!=actions.end()) {
-        if (cfg.tracing())
-          std::cout << "execute: " << action->second << "  " << dev_name << " "  << restored_age << std::endl;
-        proc_driver.execute(action->second, dev_name, restored_age);
+	auto output= proc_driver.execute(action->second, dev_name, restored_age);
+	conditional_output("(timeout)", output);
       } else if (auto offset_tm=age-cfg.max_action_count(); offset_tm>0) {
-	for (const auto &ra:retry_actions) {
-	  if ((offset_tm%ra.first)==0) {
-	    if (cfg.tracing())
-	      std::cout << "execute (retry): " << ra.second << "  " << dev_name << " "  << restored_age << std::endl;
-	    proc_driver.execute(ra.second, dev_name, restored_age);
+	for (const auto &ract:retry_actions) {
+	  if ((offset_tm%ract.first)==0) {
+	    auto output=proc_driver.execute(ract.second, dev_name, restored_age);
+	    conditional_output("(retry)", output);	      
 	  }
 	}
       }
+      prev_down_times[dev_name]=age;
     }
     for (auto &failure:proc_driver.list_failures()) {
       std::cout << failure << std::endl;
     }
-    sleep(cfg.interval());
-    if (cfg.tracing())
-      std::cout << "loop after sleeping " << cfg.interval() << "s" << std::endl;
+    sleep(interval);
   }
 
 }

@@ -108,6 +108,8 @@ namespace tunmon::cfg {
     for (auto &action:retry_actions) {
       cout << "retry each " << action.first << " iterations without incoming traffic, call " << action.second << endl;
     }
+    on_restore_script=tree_impl->tree.get("tun_mon.on_restore.script","");
+    cout << "on_restore/script :" << on_restore_script << endl;
     pid_file_setting=tree_impl->tree.get("tun_mon.pidfile","");
     cout << "pid_file :" << pid_file_setting << endl;
   }
@@ -154,6 +156,10 @@ namespace tunmon::cfg {
 
   int config::max_action_count() const {
     return last_action_iter;
+  }
+
+  const string& config::restored() const {
+    return on_restore_script;
   }
   
 }
