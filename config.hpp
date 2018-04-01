@@ -19,8 +19,10 @@ namespace tunmon::cfg {
     struct config_impl;
     struct ptree_impl;
     std::unique_ptr<config_impl> option_desc;
-    std::list<std::string> net_devices;
+    std::list<const std::string> net_devices;
     std::map<int,const std::string> actions;
+    std::list<const std::string> restore_dev_actions;
+    std::list<const std::string> restore_anydev_actions;
     void parse_ptree(std::unique_ptr<config::ptree_impl> &pree_impl);
     bool trace_flag;
     int interval_sec;
@@ -33,7 +35,9 @@ namespace tunmon::cfg {
     ~config();
     void parse_command_line(int& argc, const char *const *argv);
     void parse_xml(const std::string &filename);
-    std::list<std::string> get_net_devices() const;
+    std::list<const std::string> get_net_devices() const;
+    std::list<const std::string> get_restore_dev_actions() const;
+    std::list<const std::string> get_restore_anydev_actions() const;
     std::map<int,std::string> get_actions() const;
     std::map<int,std::string> get_retry_actions() const;
     bool tracing() const;
