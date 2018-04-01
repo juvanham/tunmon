@@ -8,7 +8,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/program_options.hpp>
-//#include <optional>
+#include <optional>
 #include <functional>
 #include <iostream>
 #include "config.hpp"
@@ -30,7 +30,7 @@ namespace tunmon::cfg {
     pt::ptree tree;
   public:
     ptree_impl() {}
-    bool store_entries_to_list(const string &pth, list<const string> &storage);
+    bool store_entries_to_list(const string &pth, const string &wrap_elem, list<const string> &storage);
     template<typename K,typename V>
     bool store_entries_to_map(const string &pth,
 			      const string &wrap_elem,
@@ -70,12 +70,16 @@ namespace tunmon::cfg {
   
   bool config::ptree_impl::store_entries_to_list(
 						 const string &pth,
+						 const string &wrap_elem,
 						 list<const string> &storage) {
     bool found{false};
-    for (auto &chld:tree.get_child(pth)) {
-      storage.push_back(chld.second.data());
-      found=true;
-    }
+    if (!tree.get_child_optional(pth))
+      return false;
+    for (auto &chld:tree.get_child(pth)) 
+      if (wrap_elem.empty() || wrap_elem==chld.first) {
+	storage.push_back(chld.second.data());
+	found=true;
+      }
     return found;
   }
 
@@ -93,9 +97,17 @@ namespace tunmon::cfg {
       const auto &key=chld.second.get<K>(key_elem);
       const auto &value=chld.second.get<V>(val_elem);
       const pair<K,V> result=fn(key,value);
-      if (result.first)
-	storage.emplace(result.first,result.second);
+      if (result.first) {
+	if (storage.find(result.first)==storage.cend()) {
+	  storage.emplace(result.first,result.second);
+	} else {
+	  cout << "collision in " << pth << " key:" << key
+	       << ", value: " << value
+	       << " @ interval:" << result.first << endl;
+	  exit(1);
+	}
       found=true;
+      }
     }
   }
   return found;
@@ -104,17 +116,17 @@ namespace tunmon::cfg {
   
   void config::parse_ptree(unique_ptr<config::ptree_impl> &tree_impl) {
     net_devices.clear();
-    if (tree_impl->store_entries_to_list("tun_mon.net_devices", net_devices)) {
+    if (tree_impl->store_entries_to_list("tun_mon.net_devices","net_device", net_devices)) {
       for (auto &dev:net_devices) {
 	cout << "net_device : " << dev << endl;
       }
     }
-    if (tree_impl->store_entries_to_list("tun_mon.restore_dev", restore_dev_actions)) {
+    if (tree_impl->store_entries_to_list("tun_mon.restore_dev", "script", restore_dev_actions)) {
       for (auto &dev:restore_dev_actions) {
 	cout << "each_restore_dev_action : " << dev << endl;
       }
     }
-    if (tree_impl->store_entries_to_list("tun_mon.restore_any", restore_anydev_actions)) {
+    if (tree_impl->store_entries_to_list("tun_mon.restore_any", "script", restore_anydev_actions)) {
       for (auto &dev:restore_anydev_actions) {
 	cout << "each_restore_anydev_action : " << dev << endl;
       }
@@ -137,44 +149,23 @@ namespace tunmon::cfg {
 													);
 							return pair(iteration_count,val);
 						      } );
-
+  tree_impl->store_entries_to_map<int,string>(
+						      "tun_mon.retry_actions",
+						      "retry",
+						      "time",
+						      "script",
+						      retry_actions,
+						      [half_interval,this](auto key, auto val) {
+     							auto iteration_count=static_cast<decltype(key)>(
+													(key+half_interval)/this->interval_sec
+													);
+							return pair(iteration_count,val);
+						      } );
       
-    for (auto &chld:tree_impl->tree.get_child("tun_mon.actions"))
-      if (chld.first=="action") {
-        auto time=chld.second.get<int>("time",0);
-        auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
-        auto script=chld.second.get<string>("script");
-        if (actions.find(iteration_count)!=actions.end()) {
-          cerr << "fatal: action " << script
-               << "collides iteration " << iteration_count << "."
-               << endl << "Consider a smaller interval" << endl;
-          exit(1);
-        }
-	last_action_iter=std::max(iteration_count,last_action_iter);	  
-        actions.insert(pair(iteration_count,
-                            script)
-                       );
-      }
+   
     for (auto &action:actions) {
       cout << "at " << action.first << " iterations without incoming traffic, call " << action.second << endl;
     }
-    cout << "max_action_age " << last_action_iter << endl;
-    retry_actions.clear(); 
-    for (auto &chld:tree_impl->tree.get_child("tun_mon.retry_actions"))
-      if (chld.first=="retry") {
-        auto time=chld.second.get<int>("interval",0);
-        auto iteration_count=static_cast<decltype(time)>((time+half_interval)/interval_sec);
-        auto script=chld.second.get<string>("script");
-        if (retry_actions.find(iteration_count)!=retry_actions.end()) {
-          cerr << "fatal: retry_action " << script
-               << "collides iteration " << iteration_count << "."
-               << endl << "Consider a smaller interval" << endl;
-          exit(1);
-        }
-        retry_actions.insert(pair(iteration_count,
-                            script)
-                       );
-      }
     for (auto &action:retry_actions) {
       cout << "retry each " << action.first << " iterations without incoming traffic, call " << action.second << endl;
     }
