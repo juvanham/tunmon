@@ -12,7 +12,7 @@
 namespace tunmon::input {
   using namespace std;
 
-  net_dev::net_dev() : current_time{0}
+  net_dev::net_dev(const std::string &proc_file_) : proc_file{proc_file_}, current_time{0} 
   { }
 
   bool net_dev::observe(const std::string &dev_name) {

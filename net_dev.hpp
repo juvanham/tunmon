@@ -19,7 +19,7 @@ namespace tunmon::input {
 
   class net_dev {
   private:
-    const std::string proc_file{"/proc/net/dev"};
+    const std::string proc_file;
     const std::string re_str{"([a-z0-9\\-]+):\\s+([0-9]+)\\s+([0-9]+)\\s+"};
     const std::regex interface_re=std::regex(re_str,std::regex_constants::icase);
 
@@ -36,7 +36,7 @@ namespace tunmon::input {
     int current_time;
     std::pair<long,long> read_incoming_data(const std::string &line);
   public:
-    net_dev();
+    net_dev(const std::string &proc_file_="/proc/net/dev");
     bool observe(const std::string &dev_name);
     bool unobserve(const std::string &dev_name);
     std::pair<long,long> parse_proc_file();
