@@ -41,14 +41,18 @@ int main(int argc, char* argv[]) {
   proc_driver.set_debug(cfg.tracing());
   while (pidfile.present()) {
     auto [bytes,packets]=dev.parse_proc_file();
+    bool restored_any_device{false};
     if (cfg.tracing())
       std::cout << "after " << interval << "s, bytes " << bytes << ", packets " << packets << std::endl;
     for (const auto &dev_name:devices) {
       const auto age=*(dev.age(dev_name));
       const auto restored_age=age*interval;
-      if (age==0 and prev_down_times[dev_name] && !(cfg.restored().empty())) {
-	auto output= proc_driver.execute(cfg.restored(), dev_name, prev_down_times[dev_name]*interval);
-	conditional_output("(restored)", output);
+      if (age==0 and prev_down_times[dev_name] ) {
+	 for (auto &action:cfg.get_restore_dev_actions()) {
+	   auto output= proc_driver.execute(action, dev_name, prev_down_times[dev_name]*interval);
+	   conditional_output("(restored)", output);
+	 }
+	 restored_any_device=true;
       }
       if (auto action=actions.find(age); action!=actions.end()) {
 	auto output= proc_driver.execute(action->second, dev_name, restored_age);
@@ -62,6 +66,12 @@ int main(int argc, char* argv[]) {
 	}
       }
       prev_down_times[dev_name]=age;
+    }
+    if (restored_any_device) {
+      for (auto &action:cfg.get_post_restore_anydev_actions()) {
+	auto output= proc_driver.execute(action, "", 0);
+	conditional_output("(restored_any)", output);
+      }
     }
     for (auto &failure:proc_driver.list_failures()) {
       std::cout << failure << std::endl;
