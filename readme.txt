@@ -1,4 +1,4 @@
-2017, Jurgen Van Ham
+2018, Jurgen Van Ham
 
 
 background: sixXs.net offered 'aiccu' to maintain tunnels, even when the client
@@ -33,9 +33,12 @@ When no traffic is received, it makes sense to send an icmp ping over this inter
   <retry_actions>
     <action><interval>120</interval><script>./script/retry.sh</script></action>
   </retry_actions>
-  <on_restore>
+  <restore_dev>
     <script>./script/restored.sh</script>
-  </on_restore>
+  </restore_dev>
+  <post_restore_any>
+    <script>./script/post_restored.sh</script>
+  </post_restore_any>
 </tun_mon>
 
 The interval is the time between two iterations of reading information from /proc/net/dev. Keeping it at 1 second is probably fine. But to reduce the work for the kernel that has to expose the statistics, it is possible to use a higher number. The times for all actions are rounded to such intervals.
@@ -46,7 +49,9 @@ The action scripts are called with arguments, the first is the name of the inter
 
 Retry options are retried after the last action did not restore incoming traffic. Retry options can reconstruct at a larger interval the tunnel, in case of some unclear external causes. (e.g., ipv4 internet down). The same interval steps apply here as for the normal actions.
 
-A single script can be called on restore of a connection. A possible use is to write in a file the up state, in case an action marks a connection as down.
+The restore_dev scripts can be called on the restore of a connection. A possible use is to write in a file the up state, in case an action marks a connection as down.
+
+When one or more devices are restored the post_restore_any scrips are executed, this could update the routing tables
 
 using the arguments '--trace 1', shows total traffic over specified network interfaces and other runtime info
 
