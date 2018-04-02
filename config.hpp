@@ -22,8 +22,8 @@ namespace tunmon::cfg {
     std::list<const std::string> net_devices;
     std::map<int,const std::string> actions;
     std::list<const std::string> restore_dev_actions;
-    std::list<const std::string> restore_anydev_actions;
-    void parse_ptree(std::unique_ptr<config::ptree_impl> &pree_impl);
+    std::list<const std::string> post_restore_anydev_actions;
+    void parse_ptree(std::unique_ptr<config::ptree_impl> &pree_impl,bool verbose);
     bool trace_flag;
     int interval_sec;
     std::string pid_file_setting;
@@ -34,17 +34,16 @@ namespace tunmon::cfg {
     config();
     ~config();
     void parse_command_line(int& argc, const char *const *argv);
-    void parse_xml(const std::string &filename);
+    void parse_xml(const std::string &filename, bool verbose=true);
     std::list<const std::string> get_net_devices() const;
     std::list<const std::string> get_restore_dev_actions() const;
-    std::list<const std::string> get_restore_anydev_actions() const;
+    std::list<const std::string> get_post_restore_anydev_actions() const;
     std::map<int,std::string> get_actions() const;
     std::map<int,std::string> get_retry_actions() const;
     bool tracing() const;
     int interval() const;
     const std::string& pidfile() const;
     int max_action_count() const;
-    const std::string& restored() const;
   };
 
 }

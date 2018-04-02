@@ -11,7 +11,11 @@
   <retry_actions>
     <retry><interval>15</interval><script>./script/retry.sh</script></retry>
   </retry_actions>
-  <on_restore>
+  <restore_dev>
     <script>./script/restored.sh</script>
-  </on_restore>
+  </restore_dev>
+  <post_restore_any>
+    <script>./script/adapt_routing.sh</script>
+  </post_restore_any>
+  
 </tun_mon>

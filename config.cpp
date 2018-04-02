@@ -92,17 +92,25 @@ namespace tunmon::cfg {
 						std::function<pair<K,V>(K,V)> fn
 						) {
   bool found{false};
+  if (!tree.get_child_optional(pth))
+    return false;
   for (auto &chld:tree.get_child(pth)) {
     if (wrap_elem.empty() || wrap_elem==chld.first) {
-      const auto &key=chld.second.get<K>(key_elem);
-      const auto &value=chld.second.get<V>(val_elem);
-      const pair<K,V> result=fn(key,value);
+      const auto &key=chld.second.get_optional<K>(key_elem);
+      if (!key) {
+	cout << "missing key " << key_elem << " in " << pth << endl;
+      }
+      const auto &value=chld.second.get_optional<V>(val_elem);
+      if (!value) {
+	cout << "missing value " << val_elem << " in " << pth << endl;
+      }
+      const pair<K,V> result=fn(*key,*value);
       if (result.first) {
 	if (storage.find(result.first)==storage.cend()) {
 	  storage.emplace(result.first,result.second);
 	} else {
-	  cout << "collision in " << pth << " key:" << key
-	       << ", value: " << value
+	  cout << "collision in " << pth << " key:" << *key
+	       << ", value: " << *value
 	       << " @ interval:" << result.first << endl;
 	  exit(1);
 	}
@@ -114,26 +122,27 @@ namespace tunmon::cfg {
   }
   
   
-  void config::parse_ptree(unique_ptr<config::ptree_impl> &tree_impl) {
+  void config::parse_ptree(unique_ptr<config::ptree_impl> &tree_impl, bool verbose) {
     net_devices.clear();
-    if (tree_impl->store_entries_to_list("tun_mon.net_devices","net_device", net_devices)) {
+    if (tree_impl->store_entries_to_list("tun_mon.net_devices","net_device", net_devices) && verbose) {
       for (auto &dev:net_devices) {
 	cout << "net_device : " << dev << endl;
       }
     }
-    if (tree_impl->store_entries_to_list("tun_mon.restore_dev", "script", restore_dev_actions)) {
+    if (tree_impl->store_entries_to_list("tun_mon.restore_dev", "script", restore_dev_actions) && verbose) {
       for (auto &dev:restore_dev_actions) {
-	cout << "each_restore_dev_action : " << dev << endl;
+	cout << "restore_dev_action : " << dev << endl;
       }
     }
-    if (tree_impl->store_entries_to_list("tun_mon.restore_any", "script", restore_anydev_actions)) {
-      for (auto &dev:restore_anydev_actions) {
-	cout << "each_restore_anydev_action : " << dev << endl;
+    if (tree_impl->store_entries_to_list("tun_mon.post_restore_any", "script", post_restore_anydev_actions) && verbose) {
+      for (auto &dev:post_restore_anydev_actions) {
+	cout << "post_restore_anydev_action : " << dev << endl;
       }
     }
     
     interval_sec=tree_impl->tree.get("tun_mon.interval",1);
-    cout << "interval : " << interval_sec << "sec" << endl;
+    if (verbose)
+      cout << "interval : " << interval_sec << "sec" << endl;
     auto half_interval=interval_sec/2;
     actions.clear();
     last_action_iter=std::numeric_limits<int>::min();
@@ -152,7 +161,7 @@ namespace tunmon::cfg {
   tree_impl->store_entries_to_map<int,string>(
 						      "tun_mon.retry_actions",
 						      "retry",
-						      "time",
+						      "interval",
 						      "script",
 						      retry_actions,
 						      [half_interval,this](auto key, auto val) {
@@ -162,24 +171,28 @@ namespace tunmon::cfg {
 							return pair(iteration_count,val);
 						      } );
       
-   
-    for (auto &action:actions) {
-      cout << "at " << action.first << " iterations without incoming traffic, call " << action.second << endl;
-    }
-    for (auto &action:retry_actions) {
-      cout << "retry each " << action.first << " iterations without incoming traffic, call " << action.second << endl;
+    if (verbose) {
+      for (auto &action:actions) {
+        cout << "at " << action.first << " iterations without incoming traffic, call " << action.second << endl;
+      }
+      for (auto &action:retry_actions) {
+        cout << "retry each " << action.first << " iterations without incoming traffic, call " << action.second << endl;
+      }
     }
     on_restore_script=tree_impl->tree.get("tun_mon.on_restore.script","");
-    cout << "on_restore/script :" << on_restore_script << endl;
+    if (verbose)
+      cout << "on_restore/script :" << on_restore_script << endl;
     pid_file_setting=tree_impl->tree.get("tun_mon.pidfile","");
-    cout << "pid_file :" << pid_file_setting << endl;
+    if (verbose)
+      cout << "pid_file :" << pid_file_setting << endl;
   }
 
-  void config::parse_xml(const std::string &filename) {
+  void config::parse_xml(const std::string &filename, bool verbose) {
     auto tree_impl=make_unique<config::ptree_impl>();
-    cout << "parse_xml " << filename << endl;
+    if (verbose)
+      cout << "parse_xml " << filename << endl;
     pt::read_xml(filename, tree_impl->tree);
-    parse_ptree(tree_impl);
+    parse_ptree(tree_impl, verbose);
   }
 
 
@@ -197,9 +210,9 @@ namespace tunmon::cfg {
     return result;
   }
   
-  list<const string> config::get_restore_anydev_actions() const {
+  list<const string> config::get_post_restore_anydev_actions() const {
      list<const string> result;
-     for (const auto &action: restore_anydev_actions)
+     for (const auto &action: post_restore_anydev_actions)
        result.emplace_back(action);
      return result;
   }
@@ -234,10 +247,6 @@ namespace tunmon::cfg {
 
   int config::max_action_count() const {
     return last_action_iter;
-  }
-
-  const string& config::restored() const {
-    return on_restore_script;
   }
   
 }
