@@ -42,7 +42,7 @@ namespace tunmon::cfg {
     std::map<int,std::string> get_retry_actions() const;
     bool tracing() const;
     int interval() const;
-    const std::string& pidfile() const;
+    std::string pidfile() const;
     int max_action_count() const;
   };
 

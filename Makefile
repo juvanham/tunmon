@@ -16,7 +16,10 @@ driver.o: driver.cpp driver.hpp
 pidfile.o: pidfile.cpp pidfile.hpp
 	$(CXX) -c pidfile.cpp
 
-main.o: main.cpp net_dev.hpp config.hpp driver.hpp pidfile.hpp
+actor.o: actor.cpp actor.hpp
+	$(CXX) -c actor.cpp
+
+main.o: main.cpp net_dev.hpp config.hpp driver.hpp pidfile.hpp actor.hpp
 	$(CXX) -c main.cpp
 
 
@@ -34,8 +37,8 @@ test_config: test_config.o config.o
 	g++ $(LIBS) $(TESTLIBS) -o test_config test_config.o config.o 	
 
 
-tun_mon: main.o net_dev.o config.o driver.o pidfile.o
-	g++ $(LIBS) -o tun_mon main.o net_dev.o config.o driver.o pidfile.o
+tun_mon: main.o net_dev.o config.o driver.o pidfile.o actor.o
+	g++ $(LIBS) -o tun_mon main.o net_dev.o config.o driver.o pidfile.o actor.o
 
 unittests: test_net_dev test_config
 	./test_net_dev && ./test_config

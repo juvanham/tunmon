@@ -241,7 +241,7 @@ namespace tunmon::cfg {
     return interval_sec;
   }
 
-  const string& config::pidfile() const {
+  string config::pidfile() const {
     return pid_file_setting;
   }
 
