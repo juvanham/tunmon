@@ -118,7 +118,7 @@ namespace tunmon::output {
     auto retval=0;
     if (env.find(devname)!=env.end())
       retval=1;
-    env[devname]=age*factor;
+    env["TUN_DOWN_"+devname]=age*factor;
     return retval;
   }
 
