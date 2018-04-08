@@ -8,10 +8,11 @@
 #include "driver.hpp"
 #include <iostream>
 #include <sstream>
+
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/process.hpp>
 #include <boost/process/shell.hpp>
-#include <boost/algorithm/string/join.hpp>
-
 
 namespace tunmon::output {
   using namespace std;
@@ -119,9 +120,11 @@ namespace tunmon::output {
 			       int age,
 			       int factor) {
     auto retval=0;
-    if (env.find(devname)!=env.end())
+    auto env_devname=boost::replace_all_copy(devname, "-", "_");
+    if (env.find(env_devname)!=env.end())
       retval=1;
-    env["TUN_DOWN_"+devname]=age*factor;
+    
+    env["TUN_DOWN_"+env_devname]=age*factor;
     return retval;
   }
 
