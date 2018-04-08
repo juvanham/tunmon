@@ -25,12 +25,12 @@ namespace tunmon::actor {
     std::string get_pidfile() {return cfg.pidfile();}
     bool tracing() const {return cfg.tracing();}
     int interval() const {return cfg.interval();}
-    std::pair<long,long> parse_proc_file() {return dev.parse_proc_file();}
+    std::pair<long,long> parse_proc_file();
     int schedule_actions();
     int schedule_retry_actions();
     int schedule_restore_actions();
     int schedule_on_restore_any();
-    std::string execute() {return proc_driver.execute();}
+    std::string execute();
     std::list<std::string> list_failures() {return proc_driver.list_failures();}
     
   };

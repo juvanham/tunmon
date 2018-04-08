@@ -18,7 +18,17 @@ namespace tunmon::actor {
     proc_driver.set_debug(cfg.tracing());
   }
 
+  std::pair<long,long> Actor::parse_proc_file() {
+    for (auto &dev_name:cfg.get_net_devices()) {
+      auto age=dev.age(dev_name);
+      if (age)
+	prev_down_times[dev_name]=*age;
+    }
+    return dev.parse_proc_file();
+  }
 
+
+  
   int Actor::schedule_actions() {
     auto action_counter=0;
     auto actions=cfg.get_actions();
@@ -79,4 +89,9 @@ namespace tunmon::actor {
     return cnt;
   }
 
+  std::string Actor::execute() {
+    proc_driver.set_dev_downtime(prev_down_times, interval());
+    return proc_driver.execute();
+  }
+  
 }
