@@ -33,11 +33,24 @@ int main(int argc, char* argv[]) {
    
     if (m.tracing())
       std::cout << "after " << interval << "s, bytes " << bytes << ", packets " << packets << std::endl;
-    m.schedule_actions();
+    auto actions_scheduled=m.schedule_actions();
+    if (m.tracing() && actions_scheduled) {
+      std::cout << actions_scheduled << " actions scheduled" << std::endl;
+    }
     auto restore_count=m.schedule_restore_actions();
-    m.schedule_retry_actions();    
+    if (m.tracing() && restore_count) {
+      std::cout << restore_count << "restore_dev actions scheduled" << std::endl;
+    }
+    auto retry_count=m.schedule_retry_actions();
+    if (m.tracing() && retry_count) {
+      std::cout << retry_count << "retry actions scheduled" << std::endl;
+    }
     if (restore_count) {
-      m.schedule_on_restore_any();
+      
+      auto on_restore_any_count=m.schedule_on_restore_any();
+      if (m.tracing() && on_restore_any_count) {
+	std::cout << on_restore_any_count << "post_restore_any actions scheduled" << std::endl;
+      }
     }
     auto output=m.execute();
     if (!output.empty())

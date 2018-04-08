@@ -6,6 +6,7 @@
  */
 
 #include "driver.hpp"
+#include <iostream>
 #include <sstream>
 #include <boost/process.hpp>
 #include <boost/process/shell.hpp>
@@ -109,6 +110,8 @@ namespace tunmon::output {
     auto current_env=boost::this_process::environment();
     for (const auto &e:env) {
       current_env[e.first]=to_string(e.second);
+      if (debug_flag)
+	std::cout << " [" << e.first << "]=" << e.second << std::endl;
     }
   }
   

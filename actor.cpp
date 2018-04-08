@@ -38,8 +38,8 @@ namespace tunmon::actor {
 	const auto age=*age_o;
 	if (auto action=actions.find(age); action!=actions.end()) {
 	  proc_driver.schedule(action->second, dev_name, age* interval());
+	  action_counter++;
 	}
-	action_counter++;
       }
     }
     return action_counter;
@@ -53,10 +53,11 @@ namespace tunmon::actor {
       if (age_o) {
 	const auto age=(*age_o)-cfg.max_action_count();
 	for (const auto &raction:retry_actions) {
-	  if (age%raction.first==0) 
-	    proc_driver.schedule(raction.second, dev_name, (*age_o) * interval());
+	  if (age%raction.first==0) {
+	    proc_driver.schedule(raction.second, dev_name, (*age_o) * interval()); 
+	    action_counter++;
+	  }
 	}
-	action_counter++;
       }
     }
     return action_counter;
@@ -72,8 +73,8 @@ namespace tunmon::actor {
 	if (age==0 and prev_down_times[dev_name] ) {
 	  for (auto &action:cfg.get_restore_dev_actions()) {
 	    proc_driver.schedule(action, dev_name, prev_down_times[dev_name]*interval());
-	  }
-	  restore_counter++;
+	    restore_counter++;
+	  }	  
 	}
       }
     }
