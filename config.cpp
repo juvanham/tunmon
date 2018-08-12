@@ -30,7 +30,7 @@ namespace tunmon::cfg {
     pt::ptree tree;
   public:
     ptree_impl() {}
-    bool store_entries_to_list(const string &pth, const string &wrap_elem, list<const string> &storage);
+    bool store_entries_to_list(const string &pth, const string &wrap_elem, list<string> &storage);
     template<typename K,typename V>
     bool store_entries_to_map(const string &pth,
 			      const string &wrap_elem,
@@ -71,7 +71,7 @@ namespace tunmon::cfg {
   bool config::ptree_impl::store_entries_to_list(
 						 const string &pth,
 						 const string &wrap_elem,
-						 list<const string> &storage) {
+						 list<string> &storage) {
     bool found{false};
     if (!tree.get_child_optional(pth))
       return false;
@@ -196,22 +196,22 @@ namespace tunmon::cfg {
   }
 
 
-  list<const string> config::get_net_devices() const {
-    list<const string> result;
+  list<string> config::get_net_devices() const {
+    list<string> result;
     for (const auto& nd: net_devices)
       result.emplace_back(nd);
     return result;
   }
 
-  list<const string> config::get_restore_dev_actions() const {
-    list<const string> result;
+  list<string> config::get_restore_dev_actions() const {
+    list<string> result;
     for (const auto &action: restore_dev_actions)
       result.emplace_back(action);
     return result;
   }
   
-  list<const string> config::get_post_restore_anydev_actions() const {
-     list<const string> result;
+  list<string> config::get_post_restore_anydev_actions() const {
+     list<string> result;
      for (const auto &action: post_restore_anydev_actions)
        result.emplace_back(action);
      return result;
