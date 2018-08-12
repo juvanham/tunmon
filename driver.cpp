@@ -76,6 +76,8 @@ namespace tunmon::output {
 
 
   string driver::execute() {
+    if (call_queue.empty())
+      return "";
     set_env();
     stringstream debugstream;
     while (!call_queue.empty()) {
