@@ -47,5 +47,5 @@ unittests: test_net_dev test_config
 .PHONY: clean
 
 clean:
-	rm -f tun_mon main.o net_dev.o config.o driver.o pidfile.o test_*.o
+	rm -f tun_mon actor.o main.o net_dev.o config.o driver.o pidfile.o test_*.o
 	rm -f tunmon.pid *~
