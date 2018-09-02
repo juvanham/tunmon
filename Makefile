@@ -1,7 +1,7 @@
 all: tun_mon
 
 CXX=g++ --std=c++17 -Wall $(CXXFLAGS) -pedantic -g
-LIBS=-lboost_program_options -lboost_system -lboost_filesystem -lpthread
+LIBS=-lboost_program_options -lboost_system -lpthread
 TESTLIBS=-lboost_unit_test_framework
 
 net_dev.o: net_dev.cpp net_dev.hpp
@@ -38,7 +38,7 @@ test_config: test_config.o config.o
 
 
 tun_mon: main.o net_dev.o config.o driver.o pidfile.o actor.o
-	g++ $(LIBS) -o tun_mon main.o net_dev.o config.o driver.o pidfile.o actor.o
+	g++ $(LIBS) -o tun_mon main.o net_dev.o config.o driver.o pidfile.o actor.o  /usr/lib64/libstdc++fs.a 
 
 unittests: test_net_dev test_config
 	./test_net_dev && ./test_config
