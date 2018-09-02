@@ -6,8 +6,8 @@
  */
 
 #include "pidfile.hpp"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <fstream>
 #include <optional>
@@ -16,8 +16,7 @@
 using namespace std;
 
 namespace posix_util {
-  namespace fs = boost::filesystem;  // for now std::filesystem is called experimental
-
+  namespace fs = std::filesystem;
 
   class pidfile::proc_entry {
     optional<pid_t> pid;
@@ -44,9 +43,9 @@ namespace posix_util {
   pidfile::proc_entry::proc_entry(const fs::path &pidfile) : proc_entry{
     [&pidfile]()->optional<pid_t>{
       if (!fs::exists(pidfile)) {
-        return {};
+        return make_optional<pid_t>({});
       }
-      fs::ifstream f(pidfile);
+      std::ifstream f(pidfile);
       pid_t p;
       f >> p;
       return p;
