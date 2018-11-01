@@ -21,12 +21,14 @@ namespace tunmon::output {
   
   class driver::process {
     const list<string> exec_args;
-    bp::child child;
-    bool busy;
-    optional<int> exit_code_;
+    std::promise<int> exit_promise;
+    std::string asString;
     bool mark;
+    std::thread async_thread;
+    std::future<int> exit_future;
+    void async_runner(const std::string &args);
   public:
-    process(const list<string> exec_args_);
+    process(const list<string> &exec_args_);
     ~process() = default;
     bool running();
     optional<int> exit_code();
@@ -36,29 +38,34 @@ namespace tunmon::output {
   };
 
   
-  driver::process::process(const  list<string> exec_args_
-			   ) : exec_args{exec_args_},
-			       child("/bin/sh", "-c", boost::algorithm::join(exec_args_," ")),
-			       busy{true},
-			       exit_code_{},
-			       mark{false}
+  driver::process::process(const  list<string> &exec_args_
+			   ) : exec_args(exec_args_),
+			       asString{boost::algorithm::join(exec_args_," ")},
+                               mark{false},
+			       async_thread([&]() {async_runner(asString);}),
+			       exit_future{exit_promise.get_future()}
   {
+    async_thread.detach();
+  }
+
+
+  void driver::process::async_runner(const std::string &args) {
+    bp::child child("/bin/sh", "-c", args);
+    child.wait();
+    exit_promise.set_value(child.exit_code());
   }
 
   bool driver::process::running() {
-    if (busy)
-      busy=child.running();
-    return busy;
+    return !exit_future.valid();
   }
 
   optional<int> driver::process::exit_code() {
-    if (busy)
-      return {};
-    if (exit_code_)
-      return exit_code_;
-    child.wait();
-    exit_code_=child.exit_code();
-    return exit_code_;
+    if (exit_future.valid()) {
+      if (async_thread.joinable())
+	async_thread.join();
+      return exit_future.get();
+    }
+    return {};
   } 
 
   
@@ -105,7 +112,8 @@ namespace tunmon::output {
 	q_elem->mark_to_remove();
       }
     }
-    process_queue.remove_if([](auto &a)->bool{return a->is_marked();});
+
+    process_queue.remove_if([](auto &a){return a->is_marked();});
     return result;
   }
 
